@@ -11,6 +11,8 @@ export interface CoinStore {
   readonly label: string;
   load(): Promise<Coin[]>;
   save(coins: Coin[]): Promise<void>;
+  /** Stores that change from elsewhere (another device) report every new version here. */
+  subscribe?(onCoins: (coins: Coin[]) => void, onError: (err: Error) => void): () => void;
 }
 
 /** Saves into data/coins.json through the dev server (npm run dev only). */

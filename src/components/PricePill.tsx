@@ -11,7 +11,7 @@ export function PriceStatusBadge() {
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
         live ? 'bg-up/12 text-up' : 'bg-gold/12 text-gold',
       )}
     >
@@ -36,7 +36,7 @@ export function PricePill() {
       <span className="hidden md:inline">
         <span className="text-faint">Au</span> <span className="font-semibold">{money(au, settings.currency, { decimals: 0 })}</span>
       </span>
-      <span className="text-faint">{relativeTime(prices.updatedAt)}</span>
+      <span className="hidden text-faint sm:inline">{relativeTime(prices.updatedAt)}</span>
       {canRefresh && (
         <button type="button" onClick={refresh} disabled={loading} className="rounded-full p-1 text-muted hover:text-ink disabled:opacity-60" aria-label="Refresh spot prices">
           <Icon name={loading ? 'spin' : 'refresh'} size={14} />
