@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { clampCrop, MAX_ZOOM, MIN_ZOOM, sourceRect, zoomAround, type CropState } from '../../lib/crop';
 import { Button, Modal } from '../ui/primitives';
+import { loadReadableImage } from '../../lib/remoteImage';
 
 /** Size of the saved square photo, in pixels. */
 const OUTPUT = 800;
@@ -33,16 +34,13 @@ export function PhotoCropper({
     setError(null);
     setCrop({ zoom: 1, x: 0, y: 0 });
     if (!src) return;
-    // Web images: ask for permission to edit first (CORS); if the site refuses, load it plainly
-    // so it still shows, and explain on save if the browser blocks the edit.
-    const load = (anonymous: boolean) => {
-      const i = new Image();
-      if (anonymous) i.crossOrigin = 'anonymous';
-      i.onload = () => setImg(i);
-      i.onerror = () => (anonymous ? load(false) : setError('This image could not be opened.'));
-      i.src = src;
+    let alive = true;
+    loadReadableImage(src)
+      .then((i) => alive && setImg(i))
+      .catch(() => alive && setError('This image could not be opened.'));
+    return () => {
+      alive = false;
     };
-    load(/^https?:/i.test(src));
   }, [src]);
 
   useEffect(() => {

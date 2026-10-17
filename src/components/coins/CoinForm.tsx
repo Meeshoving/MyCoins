@@ -7,6 +7,7 @@ import { useCoins } from '../../hooks/useCoins';
 import { useSettings } from '../../hooks/useSettings';
 import { yearRange, type NumistaSearchHit } from '../../catalog/numista';
 import { NumistaLookup } from './NumistaLookup';
+import { webImageToDataUrl } from '../../lib/remoteImage';
 import { coinThumb } from '../../lib/coinFace';
 import { PhotoCropper } from './PhotoCropper';
 import { num } from '../../lib/format';
@@ -167,6 +168,14 @@ export function CoinForm({
       }
       return next;
     });
+    // Save copies of Numista's photos with the coin, so the 3D view can use them.
+    for (const side of ['obverseImage', 'reverseImage'] as const) {
+      const url = fields[side];
+      if (!url || d[side]) continue;
+      webImageToDataUrl(url)
+        .then((data) => setD((x) => (x[side] === url ? { ...x, [side]: data } : x)))
+        .catch(() => undefined); // keep the link; it still shows as a picture
+    }
     const range = fields.year == null ? yearRange(hit) : '';
     setFilledFrom(
       `Filled in from Numista: ${hit.title}.${range ? ` Issued ${range}, so enter the year of your coin.` : ''} Check the purity and weight, then add your purchase details.`,
