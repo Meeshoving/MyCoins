@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type { Coin } from '../../domain/types';
 import { drawCoinFace, type Side } from '../../lib/coinFace';
 import { METAL_TONE } from '../../lib/metalStyle';
+import { loadReadableImage } from '../../lib/remoteImage';
 import { useSettings } from '../../hooks/useSettings';
 import { cx } from '../ui/primitives';
 
@@ -28,19 +29,16 @@ function useFaceTexture(coin: Coin, side: Side): { map: THREE.Texture; bump: THR
     setPhoto(null);
     if (!url) return;
     let alive = true;
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin('anonymous');
-    loader.load(
-      url,
-      (t) => {
-        if (!alive) return t.dispose();
+    loadReadableImage(url)
+      .then((img) => {
+        if (!alive) return;
+        const t = new THREE.Texture(img);
         t.colorSpace = THREE.SRGBColorSpace;
         t.anisotropy = 8;
+        t.needsUpdate = true;
         setPhoto(t);
-      },
-      undefined,
-      () => alive && setPhoto(null),
-    );
+      })
+      .catch(() => alive && setPhoto(null));
     return () => {
       alive = false;
     };
