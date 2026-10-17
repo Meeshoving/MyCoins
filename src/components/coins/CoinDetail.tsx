@@ -102,6 +102,15 @@ export default function CoinDetail({ id, onEdit }: { id: string; onEdit: (c: Coi
                 ))}
             </dl>
             {coin.notes && <p className="mt-4 whitespace-pre-line rounded-2xl bg-surface-2 p-4 text-sm text-muted">{coin.notes}</p>}
+            {coin.numistaUrl && (
+              <p className="mt-4 text-xs text-faint">
+                Catalogue details from{' '}
+                <a className="font-semibold text-gold underline underline-offset-2" href={coin.numistaUrl} target="_blank" rel="noreferrer">
+                  Numista
+                </a>
+                .
+              </p>
+            )}
           </Card>
 
           <Button variant="primary" onClick={() => onEdit(coin)}>

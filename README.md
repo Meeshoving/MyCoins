@@ -77,6 +77,16 @@ For the most realistic look, photograph each side of the coin straight from abov
 
 Photos are saved as 800 × 800 JPEGs together with the coin. You can also paste an image link instead, but some websites don't allow their images to be cropped. Without a photo, the app draws a placeholder face with the coin's name and year.
 
+### Look up a coin in Numista
+
+The app can fill in a coin's details and photos from the [Numista](https://en.numista.com) catalogue:
+
+1. Create a free account on Numista and request an API key at <https://en.numista.com/api/>.
+2. In MyCoins, open **Settings → Coin catalogue** and paste the key. It is saved in your browser only and never leaves it except to talk to Numista.
+3. When adding a coin, type its name in **Look up in Numista**, press **Search** and pick the right result.
+
+This fills in the name, country, denomination, metal, purity, weight, size and the Numista photos. Your quantity, price and own photos are kept. If the coin was issued over several years, enter the year of your coin yourself. Some Numista photos may not show on the 3D coin or be croppable, because Numista decides whether other websites may use them; in that case, add your own photo.
+
 ### Where edits are saved
 
 | How you run the app | Saved to |
@@ -115,6 +125,7 @@ data/coins.json            your collection when running locally (starts empty)
 data/examples.json         example coins visitors can load to try the app
 src/domain/                types, valuation maths, Dutch/era classification, validation (+ tests)
 src/prices/                swappable spot-price providers (+ tests)
+src/catalog/               Numista coin catalogue lookup (+ tests)
 src/storage/               where coins are saved (dev file API, browser IndexedDB) and example coins
 src/hooks/                 React state for settings, prices, coins, routing
 src/components/dashboard/  overview, hero totals, charts
