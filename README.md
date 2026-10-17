@@ -71,14 +71,18 @@ Required fields: `id`, `name`, `country`, `metal` (`silver`, `gold` or `platinum
 
 `collectorValuePerCoin` is optional. When it is set, the coin is valued at that price and the app shows its premium over melt value. When it is empty, the coin is valued at melt.
 
-Images can be web URLs or photos picked in the form. Photos are shrunk and stored inside `coins.json`. Without an image the app draws a placeholder face with the coin's name and year.
+### Photos
+
+For the most realistic look, photograph each side of the coin straight from above on a plain background, with even light and no flash glare. In the form, click **Add photo** (on a phone this can open the camera). Then drag and zoom so the coin fills the circle, and click **Use photo**. Click **Adjust** to re-crop later. The 3D view puts your photos on the coin's faces.
+
+Photos are saved as 800 × 800 JPEGs together with the coin. You can also paste an image link instead, but some websites don't allow their images to be cropped. Without a photo, the app draws a placeholder face with the coin's name and year.
 
 ### Where edits are saved
 
 | How you run the app | Saved to |
 | --- | --- |
 | `npm run dev` | `data/coins.json` directly (the previous version is kept as `data/coins.backup.json`) |
-| The website, or any built copy | That browser's local storage, starting empty |
+| The website, or any built copy | That browser's own storage (IndexedDB), starting empty |
 
 **Settings → Data** lets you export the whole collection as a JSON backup and import one again.
 
@@ -111,7 +115,7 @@ data/coins.json            your collection when running locally (starts empty)
 data/examples.json         example coins visitors can load to try the app
 src/domain/                types, valuation maths, Dutch/era classification, validation (+ tests)
 src/prices/                swappable spot-price providers (+ tests)
-src/storage/               where coins are saved (dev file API, localStorage)
+src/storage/               where coins are saved (dev file API, browser IndexedDB) and example coins
 src/hooks/                 React state for settings, prices, coins, routing
 src/components/dashboard/  overview, hero totals, charts
 src/components/coins/      collection grid/table, coin detail, add/edit form

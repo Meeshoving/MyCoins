@@ -4,7 +4,8 @@ import { CURRENCIES, METALS } from '../../domain/types';
 import { newCoinId, validateCoin } from '../../domain/validate';
 import { GRAMS_PER_TROY_OZ } from '../../domain/valuation';
 import { useCoins } from '../../hooks/useCoins';
-import { fileToDataUrl } from '../../lib/image';
+import { coinThumb } from '../../lib/coinFace';
+import { PhotoCropper } from './PhotoCropper';
 import { num } from '../../lib/format';
 import { navigate } from '../../hooks/useRoute';
 import { Button, Modal } from '../ui/primitives';
@@ -70,6 +71,11 @@ function fromDraft(d: Draft): Partial<Coin> {
   return coin;
 }
 
+/** Enough of a coin to draw a placeholder preview from the form. */
+function previewCoin(d: Draft): Coin {
+  return { ...(fromDraft(d) as Coin), metal: (d.metal as Coin['metal']) || 'silver', grossWeightGrams: optNum(d.grossWeightGrams) ?? 0, purity: parsePurity(d.purity) || 0 };
+}
+
 const inputCls =
   'h-10 w-full rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink placeholder:text-faint focus:outline-none focus-visible:border-gold';
 
@@ -123,14 +129,18 @@ export function CoinForm({
   const weight = optNum(d.grossWeightGrams) ?? 0;
   const pureG = Number.isFinite(purity) ? weight * purity : 0;
 
-  async function onImage(side: 'obverseImage' | 'reverseImage', file?: File) {
+  // Photo being cropped: which side, and the image to crop (object URL or data URL).
+  const [cropping, setCropping] = useState<{ side: 'obverseImage' | 'reverseImage'; src: string } | null>(null);
+
+  function onImage(side: 'obverseImage' | 'reverseImage', file?: File) {
     if (!file) return;
-    try {
-      const url = await fileToDataUrl(file);
-      setD((x) => ({ ...x, [side]: url }));
-    } catch {
-      setErrors(['Could not read that image file']);
-    }
+    setCropping({ side, src: URL.createObjectURL(file) });
+  }
+
+  function endCrop(dataUrl?: string) {
+    if (cropping?.src.startsWith('blob:')) URL.revokeObjectURL(cropping.src);
+    if (dataUrl && cropping) setD((x) => ({ ...x, [cropping.side]: dataUrl }));
+    setCropping(null);
   }
 
   async function submit(e: React.FormEvent) {
@@ -233,24 +243,61 @@ export function CoinForm({
         </fieldset>
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="mb-3 font-display text-lg font-semibold">Images</legend>
-          {(['obverseImage', 'reverseImage'] as const).map((side) => (
-            <Field key={side} htmlFor={fid(side)} label={side === 'obverseImage' ? 'Obverse (front)' : 'Reverse (back)'} hint="Paste an image URL or pick a photo. Empty = generated placeholder.">
-              <div className="flex gap-2">
-                {text(side, { placeholder: 'https://… or empty', type: 'text' })}
-                <span className="relative inline-flex">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="absolute inset-0 cursor-pointer opacity-0"
-                    aria-label={`Upload ${side === 'obverseImage' ? 'obverse' : 'reverse'} photo`}
-                    onChange={(e) => onImage(side, e.target.files?.[0])}
-                  />
-                  <span className="inline-flex h-10 items-center rounded-xl border border-line px-3 text-sm font-semibold">Photo</span>
-                </span>
+          <legend className="mb-1 font-display text-lg font-semibold">Photos</legend>
+          <p className="text-sm text-muted sm:col-span-2">
+            Take a photo of each side straight from above, on a plain background. You'll crop the coin into a circle next.
+          </p>
+          {(['obverseImage', 'reverseImage'] as const).map((side) => {
+            const label = side === 'obverseImage' ? 'Front (obverse)' : 'Back (reverse)';
+            const preview = d[side] || (d.name ? coinThumb(previewCoin(d), side === 'obverseImage' ? 'obverse' : 'reverse', 160) : '');
+            return (
+              <div key={side} className="rounded-2xl border border-line bg-surface-2 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-faint">{label}</p>
+                <div className="mt-3 flex items-center gap-4">
+                  {preview ? (
+                    <img src={preview} alt="" className="size-20 shrink-0 rounded-full object-cover shadow-card" />
+                  ) : (
+                    <span className="size-20 shrink-0 rounded-full border border-dashed border-line" aria-hidden />
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="relative inline-flex">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 cursor-pointer opacity-0"
+                        aria-label={`Choose or take a photo of the ${label.toLowerCase()}`}
+                        onChange={(e) => {
+                          onImage(side, e.target.files?.[0]);
+                          e.target.value = '';
+                        }}
+                      />
+                      <span className="inline-flex h-9 items-center rounded-full border border-line bg-surface px-3 text-sm font-semibold">
+                        {d[side] ? 'New photo' : 'Add photo'}
+                      </span>
+                    </span>
+                    {d[side].startsWith('data:') && (
+                      <Button type="button" className="h-9 px-3" onClick={() => setCropping({ side, src: d[side] })}>
+                        Adjust
+                      </Button>
+                    )}
+                    {d[side] && (
+                      <Button type="button" variant="quiet" className="h-9 px-3" onClick={() => setD((x) => ({ ...x, [side]: '' }))}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {!d[side].startsWith('data:') && (
+                  <div className="mt-3">
+                    <label htmlFor={fid(side)} className="text-xs text-faint">
+                      Or paste an image link
+                    </label>
+                    {text(side, { placeholder: 'https://…', type: 'url', className: `${inputCls} mt-1 h-9` })}
+                  </div>
+                )}
               </div>
-            </Field>
-          ))}
+            );
+          })}
         </fieldset>
 
         <Field htmlFor={fid('notes')} label="Notes">
@@ -283,6 +330,12 @@ export function CoinForm({
           </Button>
         </div>
       </form>
+      <PhotoCropper
+        src={cropping?.src ?? null}
+        title={cropping?.side === 'reverseImage' ? 'Crop the back' : 'Crop the front'}
+        onCancel={() => endCrop()}
+        onDone={(url) => endCrop(url)}
+      />
     </Modal>
   );
 }

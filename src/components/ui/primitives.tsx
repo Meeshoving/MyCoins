@@ -104,8 +104,12 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      // React passes a nested dialog's close/cancel events up to this one; only react to our own.
+      onClose={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       onCancel={(e) => {
+        if (e.target !== e.currentTarget) return;
         e.preventDefault();
         onClose();
       }}

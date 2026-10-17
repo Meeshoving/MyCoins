@@ -114,10 +114,11 @@ function CoinMesh({ coin, side, roughness }: { coin: Coin; side: Side; roughness
         <meshStandardMaterial color={tone.base} {...common} />
       </mesh>
       <mesh geometry={disc} position={[0, 0, fieldY]}>
-        <meshStandardMaterial map={obv.map} bumpMap={obv.bump ?? undefined} bumpScale={1.5} color="#ffffff" {...face} />
+        {/* Keyed so switching between placeholder (with bump map) and photo rebuilds the shader. */}
+        <meshStandardMaterial key={obv.bump ? 'drawn' : 'photo'} map={obv.map} bumpMap={obv.bump ?? undefined} bumpScale={1.5} color="#ffffff" {...face} />
       </mesh>
       <mesh geometry={disc} position={[0, 0, -fieldY]} rotation={[0, Math.PI, 0]}>
-        <meshStandardMaterial map={rev.map} bumpMap={rev.bump ?? undefined} bumpScale={1.5} color="#ffffff" {...face} />
+        <meshStandardMaterial key={rev.bump ? 'drawn' : 'photo'} map={rev.map} bumpMap={rev.bump ?? undefined} bumpScale={1.5} color="#ffffff" {...face} />
       </mesh>
     </group>
   );
