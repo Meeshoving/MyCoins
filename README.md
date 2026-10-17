@@ -25,6 +25,7 @@ Other commands:
 npm test           # unit tests for the valuation maths and price providers
 npm run build      # production build into dist/
 npm run preview    # serve the production build
+npm run history    # download the price history used by the price charts
 ```
 
 ## Website (GitHub Pages)
@@ -125,6 +126,18 @@ The price badge in the header shows **Live**, **Stale** (live prices couldn't be
 
 Prices refresh automatically every 15 minutes by default (you can change this in Settings). Click the refresh icon in the header to refresh at any time. The last prices are cached, so the app opens instantly.
 
+### Price history
+
+Click the silver or gold price in the header (on a phone, the **Live** badge) to open the price history page. It shows silver, gold and platinum per troy ounce in your currency, from 1960 until today. Pick **1Y** to **All** (30 years is the default), type a **From** and **To** month, or drag the handles of the small chart under the graph to choose the time span yourself. The cards above the graph show the price at the end of the span, the change over the span, and the highest and lowest month.
+
+The history is free and needs no key:
+
+- Monthly average metal prices from the [World Bank Pink Sheet](https://www.worldbank.org/en/research/commodity-markets) (CC BY 4.0), in US dollars.
+- Monthly exchange rates from the [Federal Reserve (FRED)](https://fred.stlouisfed.org/). Euro prices before 1999 are converted through the Deutsche Mark.
+- The last point of the graph is today's live spot price.
+
+`npm run history` downloads both and writes `public/data/price-history.json` (not stored in git). The website workflow runs it before every build and once a month on the 6th, after the World Bank publishes its new figures. **Start MyCoins.bat** runs it too. If the download fails, the last file is kept and the build still succeeds.
+
 To add another price source, implement the small `PriceProvider` interface in `src/prices/providers.ts` and add it to `PROVIDERS`.
 
 ## Valuation
@@ -145,6 +158,8 @@ data/examples.json         example coins visitors can load to try the app
 src/domain/                types, valuation maths, Dutch/era classification, validation (+ tests)
 src/prices/                swappable spot-price providers (+ tests)
 src/catalog/               Numista coin catalogue lookup (+ tests)
+src/history/               price history loading and range maths (+ tests)
+scripts/                   downloads the price history (World Bank, FRED) at build time (+ tests)
 src/sync/                  Google sign-in and syncing through Firebase (+ tests)
 src/storage/               where coins are saved (dev file API, browser IndexedDB) and example coins
 src/hooks/                 React state for settings, prices, coins, routing
@@ -152,6 +167,7 @@ src/components/dashboard/  overview, hero totals, charts
 src/components/coins/      collection grid/table, coin detail, add/edit form
 src/components/viewer/     3D coin viewer (three.js)
 src/components/settings/   settings page
+src/components/prices/     price history page
 vite-plugins/              dev-server API that writes data/coins.json
 ```
 
