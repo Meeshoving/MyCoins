@@ -33,10 +33,16 @@ export function PhotoCropper({
     setError(null);
     setCrop({ zoom: 1, x: 0, y: 0 });
     if (!src) return;
-    const i = new Image();
-    i.onload = () => setImg(i);
-    i.onerror = () => setError('This image could not be opened.');
-    i.src = src;
+    // Web images: ask for permission to edit first (CORS); if the site refuses, load it plainly
+    // so it still shows, and explain on save if the browser blocks the edit.
+    const load = (anonymous: boolean) => {
+      const i = new Image();
+      if (anonymous) i.crossOrigin = 'anonymous';
+      i.onload = () => setImg(i);
+      i.onerror = () => (anonymous ? load(false) : setError('This image could not be opened.'));
+      i.src = src;
+    };
+    load(/^https?:/i.test(src));
   }, [src]);
 
   useEffect(() => {

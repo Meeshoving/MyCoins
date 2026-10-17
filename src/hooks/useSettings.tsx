@@ -15,6 +15,8 @@ export interface Settings {
   manualUpdatedAt: string;
   /** Minutes between automatic refreshes of live prices. */
   refreshMinutes: number;
+  /** Personal Numista API key for the coin lookup. Kept in this browser only. */
+  numistaKey: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   manualCurrency: 'EUR',
   manualUpdatedAt: '2026-10-17T00:00:00.000Z',
   refreshMinutes: 15,
+  numistaKey: '',
 };
 
 const KEY = 'mycoins.settings.v1';

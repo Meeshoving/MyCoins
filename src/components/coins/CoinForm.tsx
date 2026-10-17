@@ -4,6 +4,9 @@ import { CURRENCIES, METALS } from '../../domain/types';
 import { newCoinId, validateCoin } from '../../domain/validate';
 import { GRAMS_PER_TROY_OZ } from '../../domain/valuation';
 import { useCoins } from '../../hooks/useCoins';
+import { useSettings } from '../../hooks/useSettings';
+import { yearRange, type NumistaSearchHit } from '../../catalog/numista';
+import { NumistaLookup } from './NumistaLookup';
 import { coinThumb } from '../../lib/coinFace';
 import { PhotoCropper } from './PhotoCropper';
 import { num } from '../../lib/format';
@@ -16,7 +19,7 @@ type Draft = Record<keyof Coin, string>;
 const FIELDS: (keyof Coin)[] = [
   'id', 'name', 'country', 'year', 'mint', 'denomination', 'metal', 'purity', 'grossWeightGrams', 'quantity',
   'purchasePricePerCoin', 'purchaseCurrency', 'purchaseDate', 'collectorValuePerCoin', 'notes', 'obverseImage',
-  'reverseImage', 'diameterMm', 'thicknessMm', 'mintage', 'grade',
+  'reverseImage', 'diameterMm', 'thicknessMm', 'mintage', 'grade', 'numistaId', 'numistaUrl',
 ];
 
 function toDraft(coin: Coin | null, currency: Currency): Draft {
@@ -65,6 +68,8 @@ function fromDraft(d: Draft): Partial<Coin> {
     thicknessMm: optNum(d.thicknessMm),
     mintage: optNum(d.mintage),
     grade: optStr(d.grade),
+    numistaId: optNum(d.numistaId),
+    numistaUrl: optStr(d.numistaUrl),
   };
   // Drop empty optional fields so coins.json stays tidy.
   for (const k of Object.keys(coin) as (keyof Coin)[]) if (coin[k] === undefined) delete coin[k];
@@ -108,16 +113,19 @@ export function CoinForm({
   currency: Currency;
 }) {
   const { upsert, remove } = useCoins();
+  const { settings } = useSettings();
   const [d, setD] = useState<Draft>(() => toDraft(coin, currency));
   const [errors, setErrors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [filledFrom, setFilledFrom] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setD(toDraft(coin, currency));
       setErrors([]);
       setConfirmDelete(false);
+      setFilledFrom(null);
     }
   }, [open, coin, currency]);
 
@@ -141,6 +149,28 @@ export function CoinForm({
     if (cropping?.src.startsWith('blob:')) URL.revokeObjectURL(cropping.src);
     if (dataUrl && cropping) setD((x) => ({ ...x, [cropping.side]: dataUrl }));
     setCropping(null);
+  }
+
+  /** Copy catalogue details into the form. Keeps purchase details and any photos already added. */
+  function fillFromNumista(fields: Partial<Coin>, hit: NumistaSearchHit) {
+    setD((x) => {
+      const next = { ...x };
+      for (const [k, v] of Object.entries(fields) as [keyof Coin, unknown][]) {
+        if (v == null) continue;
+        if ((k === 'obverseImage' || k === 'reverseImage') && x[k]) continue;
+        next[k] = String(v);
+      }
+      // A coin issued over several years: clear the year so it gets checked, unless one is filled in.
+      if (fields.year == null && hit.min_year != null && hit.max_year !== hit.min_year && x.year) {
+        const y = Number(x.year);
+        if (!(y >= hit.min_year && y <= (hit.max_year ?? y))) next.year = '';
+      }
+      return next;
+    });
+    const range = fields.year == null ? yearRange(hit) : '';
+    setFilledFrom(
+      `Filled in from Numista: ${hit.title}.${range ? ` Issued ${range}, so enter the year of your coin.` : ''} Check the purity and weight, then add your purchase details.`,
+    );
   }
 
   async function submit(e: React.FormEvent) {
@@ -186,9 +216,18 @@ export function CoinForm({
           </ul>
         )}
 
+        <div className="space-y-3">
+          <NumistaLookup key={String(open)} apiKey={settings.numistaKey} initialQuery={coin?.name ?? ''} autoFocus={!!settings.numistaKey && !coin} onPick={fillFromNumista} onOpenSettings={onClose} />
+          {filledFrom && (
+            <p role="status" className="rounded-2xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
+              {filledFrom}
+            </p>
+          )}
+        </div>
+
         <fieldset className="grid gap-4 sm:grid-cols-2">
           <legend className="mb-3 font-display text-lg font-semibold">Coin</legend>
-          <Field htmlFor={fid('name')} label="Name" className="sm:col-span-2">{text('name', { required: true, placeholder: 'e.g. Rijksdaalder Wilhelmina', autoFocus: true })}</Field>
+          <Field htmlFor={fid('name')} label="Name" className="sm:col-span-2">{text('name', { required: true, placeholder: 'e.g. Rijksdaalder Wilhelmina', autoFocus: !settings.numistaKey || !!coin })}</Field>
           <Field htmlFor={fid('country')} label="Country">{text('country', { required: true, list: 'mc-countries' })}</Field>
           <Field htmlFor={fid('year')} label="Year">{number('year', { inputMode: 'numeric', placeholder: '1938' })}</Field>
           <Field htmlFor={fid('denomination')} label="Denomination">{text('denomination', { placeholder: '2½ gulden' })}</Field>
@@ -275,7 +314,7 @@ export function CoinForm({
                         {d[side] ? 'New photo' : 'Add photo'}
                       </span>
                     </span>
-                    {d[side].startsWith('data:') && (
+                    {d[side] && (
                       <Button type="button" className="h-9 px-3" onClick={() => setCropping({ side, src: d[side] })}>
                         Adjust
                       </Button>

@@ -178,6 +178,37 @@ export function SettingsPage() {
       </Card>
 
       <Card className="space-y-4 p-6">
+        <Eyebrow>Coin catalogue</Eyebrow>
+        <p className="text-sm text-muted">
+          With a free{' '}
+          <a className="text-gold underline underline-offset-2" href="https://en.numista.com/api/" target="_blank" rel="noreferrer">
+            Numista API key
+          </a>{' '}
+          you can look up a coin when adding it and fill in its details and photos automatically. The key is saved in this browser only.
+        </p>
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint">Numista API key</span>
+          <input
+            className={inputCls}
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="Paste your key here"
+            value={settings.numistaKey}
+            onChange={(e) => update({ numistaKey: e.target.value.trim() })}
+          />
+        </label>
+        {settings.numistaKey && (
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+            <span>Key saved. Look for “Look up in Numista” when you add a coin.</span>
+            <Button variant="quiet" onClick={() => update({ numistaKey: '' })}>
+              Remove key
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      <Card className="space-y-4 p-6">
         <Eyebrow>Data</Eyebrow>
         <p className="text-sm text-muted">
           Saving to: <span className="font-semibold text-ink">{storeLabel}</span>

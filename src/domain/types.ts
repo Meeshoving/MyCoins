@@ -33,6 +33,9 @@ export interface Coin {
   thicknessMm?: number;
   mintage?: number;
   grade?: string;
+  /** Numista catalogue id and page, when the details came from a Numista lookup. */
+  numistaId?: number;
+  numistaUrl?: string;
 }
 
 /** Spot prices per troy ounce, quoted in `currency`. */
