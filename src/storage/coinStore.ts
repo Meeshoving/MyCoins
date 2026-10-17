@@ -1,4 +1,3 @@
-import seed from '../../data/coins.json';
 import type { Coin } from '../domain/types';
 
 export interface CoinFile {
@@ -13,8 +12,6 @@ export interface CoinStore {
   load(): Promise<Coin[]>;
   save(coins: Coin[]): Promise<void>;
 }
-
-const seedFile = seed as CoinFile;
 
 /** Saves into data/coins.json through the dev server (npm run dev only). */
 export class DevFileStore implements CoinStore {
@@ -36,7 +33,7 @@ export class DevFileStore implements CoinStore {
 
 const LS_KEY = 'mycoins.coins.v1';
 
-/** Saves in this browser. Starts from the bundled data/coins.json. */
+/** Saves in this browser, so every visitor has their own collection. Starts empty. */
 export class LocalStorageStore implements CoinStore {
   readonly label = 'This browser (localStorage)';
   async load(): Promise<Coin[]> {
@@ -44,9 +41,9 @@ export class LocalStorageStore implements CoinStore {
       const raw = localStorage.getItem(LS_KEY);
       if (raw) return (JSON.parse(raw) as CoinFile).coins;
     } catch {
-      /* storage blocked or corrupt: fall through to seed */
+      /* storage blocked or corrupt: start empty */
     }
-    return structuredClone(seedFile.coins);
+    return [];
   }
   async save(coins: Coin[]): Promise<void> {
     localStorage.setItem(LS_KEY, JSON.stringify({ version: 1, coins } satisfies CoinFile));

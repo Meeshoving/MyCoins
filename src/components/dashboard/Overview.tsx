@@ -4,7 +4,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { usePrices } from '../../hooks/usePrices';
 import { useValuations } from '../../hooks/useValuations';
 import { GRAMS_PER_TROY_OZ, groupValue } from '../../domain/valuation';
-import { eraOf } from '../../domain/classify';
+import { EXAMPLE_COINS } from '../../storage/examples';
 import { METALS } from '../../domain/types';
 import { money, num, pct, signedMoney } from '../../lib/format';
 import { byOrigin, ORIGIN_OPTIONS, type Origin } from '../../lib/filters';
@@ -16,7 +16,7 @@ import { PriceStatusBadge } from '../PricePill';
 import { BarBreakdown, DonutBreakdown } from './Charts';
 
 export function Overview({ onAdd }: { onAdd: () => void }) {
-  const { coins: all } = useCoins();
+  const { coins: all, replaceAll } = useCoins();
   const { settings } = useSettings();
   const { prices, fx } = usePrices();
   const [origin, setOrigin] = useState<Origin>('all');
@@ -26,17 +26,23 @@ export function Overview({ onAdd }: { onAdd: () => void }) {
 
   const byMetal = METALS.map((m) => ({ key: METAL_TONE[m].label, value: s.valueByMetal[m], color: m === 'gold' ? 'var(--gold)' : m === 'platinum' ? 'var(--faint)' : 'var(--silver)' })).filter((x) => x.value > 0);
   const byCountry = useMemo(() => groupValue(coins, (c) => c.country, prices, cur, fx), [coins, prices, cur, fx]);
-  const byEra = useMemo(() => groupValue(coins, eraOf, prices, cur, fx), [coins, prices, cur, fx]);
   const top = [...coins].sort((a, b) => byId.get(b.id)!.valueTotal - byId.get(a.id)!.valueTotal).slice(0, 5);
 
   if (all.length === 0) {
     return (
       <Card className="rise mx-auto mt-10 max-w-lg p-10 text-center">
-        <h1 className="font-display text-3xl font-semibold">Your vault is empty</h1>
-        <p className="mt-3 text-muted">Add your first coin to start tracking value and silver content.</p>
-        <Button variant="primary" className="mt-6" onClick={onAdd}>
-          <Icon name="plus" /> Add a coin
-        </Button>
+        <img src="./favicon.svg" alt="" className="mx-auto size-16" />
+        <h1 className="mt-5 font-display text-3xl font-semibold">Start your collection</h1>
+        <p className="mt-3 text-muted">
+          Add your first coin to track its value and silver content. Your coins are saved in this browser only, so nobody else sees them.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button variant="primary" onClick={onAdd}>
+            <Icon name="plus" /> Add a coin
+          </Button>
+          <Button onClick={() => void replaceAll(EXAMPLE_COINS)}>Try with example coins</Button>
+        </div>
+        <p className="mt-4 text-xs text-faint">You can remove the examples again in Settings.</p>
       </Card>
     );
   }
@@ -79,17 +85,9 @@ export function Overview({ onAdd }: { onAdd: () => void }) {
           <Eyebrow>By metal</Eyebrow>
           <DonutBreakdown data={byMetal} currency={cur} />
         </Card>
-        <Card className="rise p-6 lg:col-span-2">
+        <Card className="rise p-6">
           <Eyebrow>By country</Eyebrow>
           <BarBreakdown data={byCountry} currency={cur} layout="horizontal" />
-        </Card>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="rise p-6 lg:col-span-2">
-          <Eyebrow>By era</Eyebrow>
-          <p className="mt-1 text-xs text-faint">Dutch coins by monarch, others by decade</p>
-          <BarBreakdown data={byEra} currency={cur} layout="vertical" />
         </Card>
         <Card className="rise p-6">
           <div className="flex items-baseline justify-between">

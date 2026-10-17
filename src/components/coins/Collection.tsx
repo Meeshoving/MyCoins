@@ -139,7 +139,14 @@ export function Collection({ onAdd }: { onAdd: () => void }) {
         />
       </Card>
 
-      {shown.length === 0 ? (
+      {coins.length === 0 ? (
+        <div className="py-16 text-center">
+          <p className="text-muted">You haven't added any coins yet.</p>
+          <Button variant="primary" className="mt-4" onClick={onAdd}>
+            <Icon name="plus" /> Add your first coin
+          </Button>
+        </div>
+      ) : shown.length === 0 ? (
         <p className="py-16 text-center text-muted">No coins match these filters.</p>
       ) : view === 'grid' ? (
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">

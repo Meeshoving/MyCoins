@@ -33,13 +33,13 @@ Every change merged into `main` is tested, built and published automatically to 
 
 One-time setup: in the repository on GitHub, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
 
-On the website, coins you add or edit are saved in that browser, so your phone and your computer each keep their own copy. Use **Settings → Export JSON backup** and **Import JSON…** to move a collection between them. The website starts from the example coins in `data/coins.json`.
+On the website, coins you add or edit are saved in that browser, so your phone and your computer each keep their own copy. Use **Settings → Export JSON backup** and **Import JSON…** to move a collection between them. Every visitor starts with an empty collection and only ever sees their own coins. **Try with example coins** on the empty homepage loads the samples from `data/examples.json`, and **Settings → Remove example coins** takes them out again.
 
 ## Adding a coin
 
 **In the app:** click **Add coin**, fill in the form and save. Open a coin and click **Edit coin** to change or delete it.
 
-**By hand:** edit `data/coins.json`. Each entry looks like this:
+**By hand (when running locally):** edit `data/coins.json`, which starts empty. `data/examples.json` has ready-made entries to copy from. Each entry looks like this:
 
 ```json
 {
@@ -78,7 +78,7 @@ Images can be web URLs or photos picked in the form. Photos are shrunk and store
 | How you run the app | Saved to |
 | --- | --- |
 | `npm run dev` | `data/coins.json` directly (the previous version is kept as `data/coins.backup.json`) |
-| A built copy (`npm run build`) in a browser | That browser's local storage, starting from the bundled `coins.json` |
+| The website, or any built copy | That browser's local storage, starting empty |
 
 **Settings → Data** lets you export the whole collection as a JSON backup and import one again.
 
@@ -107,7 +107,8 @@ All maths lives in `src/domain/valuation.ts` and is covered by unit tests:
 ## Project layout
 
 ```
-data/coins.json            your collection (seed data, editable by hand)
+data/coins.json            your collection when running locally (starts empty)
+data/examples.json         example coins visitors can load to try the app
 src/domain/                types, valuation maths, Dutch/era classification, validation (+ tests)
 src/prices/                swappable spot-price providers (+ tests)
 src/storage/               where coins are saved (dev file API, localStorage)

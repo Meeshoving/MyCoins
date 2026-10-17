@@ -6,6 +6,7 @@ import { CURRENCIES, METALS, type Currency, type Metal } from '../../domain/type
 import { validateCoin } from '../../domain/validate';
 import type { Coin } from '../../domain/types';
 import { PROVIDERS } from '../../prices/providers';
+import { isExample } from '../../storage/examples';
 import { dateTime, money } from '../../lib/format';
 import { spotIn } from '../../domain/valuation';
 import { Button, Card, Eyebrow, Segmented } from '../ui/primitives';
@@ -22,6 +23,8 @@ export function SettingsPage() {
   );
   const [msg, setMsg] = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<Coin[] | null>(null);
+  const [confirmRemoveExamples, setConfirmRemoveExamples] = useState(false);
+  const exampleCount = coins.filter(isExample).length;
   const fileRef = useRef<HTMLInputElement>(null);
 
   function saveManual() {
@@ -184,6 +187,34 @@ export function SettingsPage() {
           <Button onClick={() => fileRef.current?.click()}>Import JSON…</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => readImport(e.target.files?.[0])} />
         </div>
+        {exampleCount > 0 && (
+          <div className="rounded-2xl border border-line bg-surface-2 p-4 text-sm">
+            <p>
+              Your collection includes {exampleCount} example {exampleCount === 1 ? 'coin' : 'coins'}. Remove them to keep only your own coins.
+            </p>
+            <div className="mt-3 flex gap-2">
+              {confirmRemoveExamples ? (
+                <>
+                  <Button
+                    variant="danger"
+                    onClick={async () => {
+                      await replaceAll(coins.filter((c) => !isExample(c)));
+                      setConfirmRemoveExamples(false);
+                      setMsg(`Removed ${exampleCount} example ${exampleCount === 1 ? 'coin' : 'coins'}`);
+                    }}
+                  >
+                    Yes, remove examples
+                  </Button>
+                  <Button variant="quiet" onClick={() => setConfirmRemoveExamples(false)}>
+                    Keep them
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setConfirmRemoveExamples(true)}>Remove example coins</Button>
+              )}
+            </div>
+          </div>
+        )}
         {pendingImport && (
           <div role="alertdialog" aria-label="Confirm import" className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm">
             <p>
