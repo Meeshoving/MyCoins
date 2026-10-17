@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import type { Coin } from '../../domain/types';
 import { drawCoinFace, type Side } from '../../lib/coinFace';
 import { METAL_TONE } from '../../lib/metalStyle';
-import { loadReadableImage } from '../../lib/remoteImage';
+import { isWebUrl, loadReadableImage } from '../../lib/remoteImage';
+import { PhotoCoin } from './PhotoCoin';
 import { useSettings } from '../../hooks/useSettings';
 import { cx } from '../ui/primitives';
 
@@ -138,12 +139,35 @@ function Studio() {
   );
 }
 
+/**
+ * Whether the WebGL viewer can use the coin's photos. Some websites (Numista) let pages
+ * show their images but not read them, which WebGL needs; those coins use PhotoCoin instead.
+ */
+function usePhotosReadable(coin: Coin): boolean | null {
+  const urls = [coin.obverseImage, coin.reverseImage].filter((u): u is string => !!u && isWebUrl(u));
+  const key = urls.join(' ');
+  const [state, setState] = useState<{ key: string; ok: boolean } | null>(null);
+  useEffect(() => {
+    if (!key) return;
+    let alive = true;
+    Promise.all(key.split(' ').map((u) => loadReadableImage(u)))
+      .then(() => alive && setState({ key, ok: true }))
+      .catch(() => alive && setState({ key, ok: false }));
+    return () => {
+      alive = false;
+    };
+  }, [key]);
+  if (!key) return true;
+  return state?.key === key ? state.ok : null;
+}
+
 export default function CoinViewer({ coin }: { coin: Coin }) {
   const { resolvedTheme } = useSettings();
   const [side, setSide] = useState<Side>('obverse');
   const [autoRotate, setAutoRotate] = useState(false);
   const [roughness, setRoughness] = useState(coin.metal === 'gold' ? 0.22 : 0.28);
   const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const readable = usePhotosReadable(coin);
 
   return (
     <div className="relative">
@@ -158,22 +182,28 @@ export default function CoinViewer({ coin }: { coin: Coin }) {
         role="img"
         aria-label={`3D view of ${coin.name}, ${side} side. Drag to rotate, scroll or pinch to zoom.`}
       >
-        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0.3, 7.6], fov: 32 }} gl={{ antialias: true, preserveDrawingBuffer: false }}>
-          <Suspense fallback={null}>
-            <Studio />
-            <CoinMesh coin={coin} side={side} roughness={roughness} />
-            <ContactShadows position={[0, -2.4, 0]} opacity={resolvedTheme === 'dark' ? 0.6 : 0.35} scale={8} blur={2.6} far={4} />
-          </Suspense>
-          <OrbitControls
-            makeDefault
-            enablePan
-            enableDamping
-            minDistance={3}
-            maxDistance={14}
-            autoRotate={autoRotate && !reduced}
-            autoRotateSpeed={1.4}
-          />
-        </Canvas>
+        {readable === false ? (
+          <PhotoCoin coin={coin} side={side} autoRotate={autoRotate && !reduced} polish={(0.75 - roughness - 0.05) / 0.65} />
+        ) : readable === null ? (
+          <p className="grid h-full place-items-center text-sm text-muted">Loading 3D view…</p>
+        ) : (
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0.3, 7.6], fov: 32 }} gl={{ antialias: true, preserveDrawingBuffer: false }}>
+            <Suspense fallback={null}>
+              <Studio />
+              <CoinMesh coin={coin} side={side} roughness={roughness} />
+              <ContactShadows position={[0, -2.4, 0]} opacity={resolvedTheme === 'dark' ? 0.6 : 0.35} scale={8} blur={2.6} far={4} />
+            </Suspense>
+            <OrbitControls
+              makeDefault
+              enablePan
+              enableDamping
+              minDistance={3}
+              maxDistance={14}
+              autoRotate={autoRotate && !reduced}
+              autoRotateSpeed={1.4}
+            />
+          </Canvas>
+        )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

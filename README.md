@@ -85,7 +85,7 @@ The app can fill in a coin's details and photos from the [Numista](https://en.nu
 2. In MyCoins, open **Settings → Coin catalogue** and paste the key. It is saved in your browser only and never leaves it except to talk to Numista.
 3. When adding a coin, type its name in **Look up in Numista**, press **Search** and pick the right result.
 
-This fills in the name, country, denomination, metal, purity, weight, size and the Numista photos. Your quantity, price and own photos are kept. If the coin was issued over several years, enter the year of your coin yourself. Numista doesn't let other websites use its photos in 3D, so the app fetches them through [wsrv.nl](https://wsrv.nl), a free public image service, and saves a copy with the coin. If that ever fails, the photo still shows as a picture and the 3D coin falls back to its drawn design; you can always add your own photo instead.
+This fills in the name, country, denomination, metal, purity, weight, size and the Numista photos. Your quantity, price and own photos are kept. If the coin was issued over several years, enter the year of your coin yourself. Numista lets other websites show its photos but not read them, which the WebGL 3D viewer needs, and it also blocks image services that could fetch a copy. For coins with such photos, the coin page uses a simpler 3D coin built from the photos themselves (drag to turn, flip sides, auto-rotate). Your own photos, which are saved inside the app, get the full 3D view with lighting.
 
 ### Where edits are saved
 
