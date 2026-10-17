@@ -8,10 +8,16 @@ Built with Vite, React, TypeScript, Tailwind CSS, Recharts and react-three-fiber
 
 You need [Node.js](https://nodejs.org) 22 or newer.
 
+**On Windows, the easy way:** double-click **Start MyCoins.bat** in the project folder. The first time, it installs what the app needs, which takes a minute. Then it opens the app in your browser. Keep the black window open while you use the app, and close it to stop.
+
+**From a terminal:**
+
 ```bash
 npm install
 npm run dev        # open the printed URL, usually http://localhost:5173
 ```
+
+On Windows PowerShell, type `npm.cmd` instead of `npm` if you see "running scripts is disabled on this system".
 
 Other commands:
 
