@@ -25,6 +25,7 @@ Other commands:
 npm test           # unit tests for the valuation maths and price providers
 npm run build      # production build into dist/
 npm run preview    # serve the production build
+npm run history    # download the price history used by the price charts
 ```
 
 ## Website (GitHub Pages)
@@ -85,7 +86,7 @@ The app can fill in a coin's details and photos from the [Numista](https://en.nu
 2. In MyCoins, open **Settings → Coin catalogue** and paste the key. It is saved in your browser only and never leaves it except to talk to Numista.
 3. When adding a coin, type its name in **Look up in Numista**, press **Search** and pick the right result.
 
-This fills in the name, country, denomination, metal, purity, weight, size and the Numista photos. Your quantity, price and own photos are kept. If the coin was issued over several years, enter the year of your coin yourself. Numista doesn't let other websites use its photos in 3D, so the app fetches them through [wsrv.nl](https://wsrv.nl), a free public image service, and saves a copy with the coin. If that ever fails, the photo still shows as a picture and the 3D coin falls back to its drawn design; you can always add your own photo instead.
+This fills in the name, country, denomination, metal, purity, weight, size and the Numista photos. Your quantity, price and own photos are kept. If the coin was issued over several years, enter the year of your coin yourself. Numista lets other websites show its photos but not read them, which the WebGL 3D viewer needs, and it also blocks image services that could fetch a copy. For coins with such photos, the coin page uses a simpler 3D coin built from the photos themselves (drag to turn, flip sides, auto-rotate). Your own photos, which are saved inside the app, get the full 3D view with lighting.
 
 ### Where edits are saved
 
@@ -125,6 +126,18 @@ The price badge in the header shows **Live**, **Stale** (live prices couldn't be
 
 Prices refresh automatically every 15 minutes by default (you can change this in Settings). Click the refresh icon in the header to refresh at any time. The last prices are cached, so the app opens instantly.
 
+### Price history
+
+Click the silver or gold price in the header (on a phone, the **Live** badge) to open the price history page. It shows silver, gold and platinum per troy ounce in your currency, from 1960 until today. Pick **1Y** to **All** (30 years is the default), type a **From** and **To** month, or drag the handles of the small chart under the graph to choose the time span yourself. The cards above the graph show the price at the end of the span, the change over the span, and the highest and lowest month.
+
+The history is free and needs no key:
+
+- Monthly average metal prices from the [World Bank Pink Sheet](https://www.worldbank.org/en/research/commodity-markets) (CC BY 4.0), in US dollars.
+- Monthly exchange rates from the [Federal Reserve (FRED)](https://fred.stlouisfed.org/). Euro prices before 1999 are converted through the Deutsche Mark.
+- The last point of the graph is today's live spot price.
+
+`npm run history` downloads both and writes `public/data/price-history.json` (not stored in git). The website workflow runs it before every build and once a month on the 6th, after the World Bank publishes its new figures. **Start MyCoins.bat** runs it too. If the download fails, the last file is kept and the build still succeeds.
+
 To add another price source, implement the small `PriceProvider` interface in `src/prices/providers.ts` and add it to `PROVIDERS`.
 
 ## Valuation
@@ -145,6 +158,8 @@ data/examples.json         example coins visitors can load to try the app
 src/domain/                types, valuation maths, Dutch/era classification, validation (+ tests)
 src/prices/                swappable spot-price providers (+ tests)
 src/catalog/               Numista coin catalogue lookup (+ tests)
+src/history/               price history loading and range maths (+ tests)
+scripts/                   downloads the price history (World Bank, FRED) at build time (+ tests)
 src/sync/                  Google sign-in and syncing through Firebase (+ tests)
 src/storage/               where coins are saved (dev file API, browser IndexedDB) and example coins
 src/hooks/                 React state for settings, prices, coins, routing
@@ -152,6 +167,7 @@ src/components/dashboard/  overview, hero totals, charts
 src/components/coins/      collection grid/table, coin detail, add/edit form
 src/components/viewer/     3D coin viewer (three.js)
 src/components/settings/   settings page
+src/components/prices/     price history page
 vite-plugins/              dev-server API that writes data/coins.json
 ```
 

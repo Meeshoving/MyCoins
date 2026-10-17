@@ -8,6 +8,7 @@ import { SyncOffer } from './components/account/SyncOffer';
 import { Overview } from './components/dashboard/Overview';
 import { Collection } from './components/coins/Collection';
 import { SettingsPage } from './components/settings/SettingsPage';
+import { PricesPage } from './components/prices/PricesPage';
 import { CoinForm } from './components/coins/CoinForm';
 import { cx, Icon } from './components/ui/primitives';
 import type { Coin } from './domain/types';
@@ -25,7 +26,7 @@ export default function App() {
     { name: 'collection', label: 'Collection', href: href({ name: 'collection' }) },
     { name: 'settings', label: 'Settings', href: href({ name: 'settings' }) },
   ] as const;
-  const activeTab = route.name === 'coin' ? 'collection' : route.name;
+  const activeTab = route.name === 'coin' ? 'collection' : route.name === 'prices' ? 'overview' : route.name;
 
   return (
     <div className="min-h-dvh">
@@ -85,6 +86,8 @@ export default function App() {
           <Suspense fallback={<p className="py-24 text-center text-muted">Loading…</p>}>
             <CoinDetail id={route.id} onEdit={(c) => setEditing(c)} />
           </Suspense>
+        ) : route.name === 'prices' ? (
+          <PricesPage metal={route.metal} />
         ) : (
           <SettingsPage />
         )}
