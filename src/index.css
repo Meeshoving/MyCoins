@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/manrope';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* Colour tokens. Components use these via Tailwind (bg-surface, text-muted, ...). */
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-2: #efece5;
+  --line: #e2ddd2;
+  --ink: #17181b;
+  --muted: #5f6168;
+  --faint: #8b8d93;
+  --silver: #6f757e;
+  --silver-hi: #a7acb3;
+  --gold: #9a7220;
+  --gold-hi: #c9a24c;
+  --up: #1d7a4f;
+  --down: #b2362f;
+  --focus: #9a7220;
+  --metal-a: #2b2e33;
+  --metal-b: #6f757e;
+  --metal-c: #9a7220;
+  --shadow: 0 1px 2px rgb(20 20 20 / 0.04), 0 8px 24px -12px rgb(20 20 20 / 0.12);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #0d0f12;
+  --surface: #15181d;
+  --surface-2: #1c2026;
+  --line: #262b32;
+  --ink: #eceae6;
+  --muted: #a3a6ad;
+  --faint: #767a82;
+  --silver: #c3c7cd;
+  --silver-hi: #eef0f3;
+  --gold: #d8b766;
+  --gold-hi: #f0d998;
+  --up: #4fbf87;
+  --down: #f07a70;
+  --focus: #d8b766;
+  --metal-a: #c3c7cd;
+  --metal-b: #eef0f3;
+  --metal-c: #f0d998;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-silver: var(--silver);
+  --color-silver-hi: var(--silver-hi);
+  --color-gold: var(--gold);
+  --color-gold-hi: var(--gold-hi);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: var(--shadow);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.metal-text {
+  background: linear-gradient(100deg, var(--metal-a) 0%, var(--metal-b) 45%, var(--metal-a) 70%, var(--metal-c) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hairline {
+  background: linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
+  height: 1px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
