@@ -27,6 +27,14 @@ npm run build      # production build into dist/
 npm run preview    # serve the production build
 ```
 
+## Website (GitHub Pages)
+
+Every change merged into `main` is tested, built and published automatically to **https://meeshoving.github.io/MyCoins/** by `.github/workflows/pages.yml`.
+
+One-time setup: in the repository on GitHub, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+
+On the website, coins you add or edit are saved in that browser, so your phone and your computer each keep their own copy. Use **Settings → Export JSON backup** and **Import JSON…** to move a collection between them. The website starts from the example coins in `data/coins.json`.
+
 ## Adding a coin
 
 **In the app:** click **Add coin**, fill in the form and save. Open a coin and click **Edit coin** to change or delete it.
