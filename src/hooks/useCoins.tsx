@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Coin } from '../domain/types';
 import { pickStore, type CoinStore } from '../storage/coinStore';
+import { useAccount } from '../sync/account';
 
 interface CoinsState {
   coins: Coin[];
@@ -15,32 +16,56 @@ interface CoinsState {
 const CoinsContext = createContext<CoinsState | null>(null);
 
 export function CoinsProvider({ children }: { children: ReactNode }) {
+  const { status, user, cloud } = useAccount();
+  const uid = user?.uid;
   const storeRef = useRef<CoinStore | null>(null);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [storeLabel, setStoreLabel] = useState('');
 
+  // Signed in: the account's collection. Otherwise: this browser's.
   useEffect(() => {
+    if (status === 'loading' || (status === 'signed-in' && !cloud)) return;
     let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+    setLoading(true);
+    storeRef.current = null;
     (async () => {
       try {
-        const store = await pickStore();
-        const loaded = await store.load();
+        const store = uid && cloud ? new cloud.CloudStore(uid) : await pickStore();
         if (cancelled) return;
         storeRef.current = store;
         setStoreLabel(store.label);
-        setCoins(loaded);
+        if (store.subscribe) {
+          unsubscribe = store.subscribe(
+            (next) => {
+              setCoins(next);
+              setLoading(false);
+            },
+            (err) => {
+              setError(err.message);
+              setLoading(false);
+            },
+          );
+        } else {
+          const loaded = await store.load();
+          if (cancelled) return;
+          setCoins(loaded);
+          setLoading(false);
+        }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+          setLoading(false);
+        }
       }
     })();
     return () => {
       cancelled = true;
+      unsubscribe?.();
     };
-  }, []);
+  }, [status, uid, cloud]);
 
   const persist = useCallback(async (next: Coin[]) => {
     const prev = coins;

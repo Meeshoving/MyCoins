@@ -11,11 +11,14 @@ import { dateTime, money } from '../../lib/format';
 import { spotIn } from '../../domain/valuation';
 import { Button, Card, Eyebrow, Segmented } from '../ui/primitives';
 import { PriceStatusBadge } from '../PricePill';
+import { AccountCard } from '../account/AccountCard';
+import { useAccount } from '../../sync/account';
 
 const inputCls = 'h-10 w-full rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink focus:outline-none focus-visible:border-gold';
 
 export function SettingsPage() {
-  const { settings, update } = useSettings();
+  const { settings, update, syncError } = useSettings();
+  const { status } = useAccount();
   const { prices, fx, loading, error, refresh, fallback } = usePrices();
   const { coins, storeLabel, replaceAll } = useCoins();
   const [manual, setManual] = useState(() =>
@@ -69,11 +72,18 @@ export function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Settings</h1>
+      {syncError && (
+        <p role="alert" className="rounded-2xl border border-down/40 bg-down/10 px-4 py-3 text-sm text-down">
+          Settings could not be saved to your account: {syncError}
+        </p>
+      )}
       {msg && (
         <p role="status" className="rounded-2xl border border-line bg-surface-2 px-4 py-3 text-sm">
           {msg}
         </p>
       )}
+
+      <AccountCard />
 
       <Card className="space-y-5 p-6">
         <Eyebrow>Display</Eyebrow>
@@ -184,7 +194,7 @@ export function SettingsPage() {
           <a className="text-gold underline underline-offset-2" href="https://en.numista.com/api/" target="_blank" rel="noreferrer">
             Numista API key
           </a>{' '}
-          you can look up a coin when adding it and fill in its details and photos automatically. The key is saved in this browser only.
+          you can look up a coin when adding it and fill in its details and photos automatically. {status === 'signed-in' ? 'The key is saved in your account, so it works on all your devices. Only you can see it.' : 'The key is saved in this browser only.'}
         </p>
         <label className="block">
           <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint">Numista API key</span>

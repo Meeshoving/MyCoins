@@ -14,9 +14,11 @@ import { href } from '../../hooks/useRoute';
 import { Button, Card, Eyebrow, GainText, Icon, Segmented } from '../ui/primitives';
 import { PriceStatusBadge } from '../PricePill';
 import { BarBreakdown, DonutBreakdown } from './Charts';
+import { useAccount } from '../../sync/account';
 
 export function Overview({ onAdd }: { onAdd: () => void }) {
   const { coins: all, replaceAll } = useCoins();
+  const { status } = useAccount();
   const { settings } = useSettings();
   const { prices, fx } = usePrices();
   const [origin, setOrigin] = useState<Origin>('all');
@@ -34,7 +36,7 @@ export function Overview({ onAdd }: { onAdd: () => void }) {
         <img src="./favicon.svg" alt="" className="mx-auto size-16" />
         <h1 className="mt-5 font-display text-3xl font-semibold">Start your collection</h1>
         <p className="mt-3 text-muted">
-          Add your first coin to track its value and silver content. Your coins are saved in this browser only, so nobody else sees them.
+          Add your first coin to track its value and silver content. {status === 'signed-in' ? 'Your coins are saved to your account, so only you see them, on every device where you sign in.' : 'Your coins are saved in this browser only, so nobody else sees them.'}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button variant="primary" onClick={onAdd}>

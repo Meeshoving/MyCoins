@@ -3,6 +3,8 @@ import { useRoute, href, navigate } from './hooks/useRoute';
 import { useSettings } from './hooks/useSettings';
 import { useCoins } from './hooks/useCoins';
 import { PricePill } from './components/PricePill';
+import { AccountButton } from './components/account/AccountButton';
+import { SyncOffer } from './components/account/SyncOffer';
 import { Overview } from './components/dashboard/Overview';
 import { Collection } from './components/coins/Collection';
 import { SettingsPage } from './components/settings/SettingsPage';
@@ -34,7 +36,7 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <a href={href({ name: 'overview' })} className="flex items-center gap-2.5" aria-label="MyCoins home">
             <img src="./favicon.svg" alt="" className="size-8" />
-            <span className="font-display text-xl font-semibold tracking-tight">MyCoins</span>
+            <span className="hidden font-display text-xl font-semibold tracking-tight min-[420px]:inline">MyCoins</span>
           </a>
           <nav aria-label="Main" className="ml-4 hidden items-center gap-1 md:flex">
             {tabs.map((t) => (
@@ -61,6 +63,7 @@ export default function App() {
             >
               <Icon name={resolvedTheme === 'dark' ? 'sun' : 'moon'} size={16} />
             </button>
+            <AccountButton />
           </div>
         </div>
       </header>
@@ -71,6 +74,7 @@ export default function App() {
             {error}
           </p>
         )}
+        <SyncOffer />
         {loading ? (
           <p className="py-24 text-center text-muted">Loading your collection…</p>
         ) : route.name === 'overview' ? (

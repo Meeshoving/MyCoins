@@ -140,7 +140,7 @@ export function Modal({
   );
 }
 
-export function Icon({ name, size = 18 }: { name: 'plus' | 'refresh' | 'sun' | 'moon' | 'grid' | 'list' | 'search' | 'edit' | 'trash' | 'back' | 'cube' | 'spin'; size?: number }) {
+export function Icon({ name, size = 18 }: { name: 'plus' | 'refresh' | 'sun' | 'moon' | 'grid' | 'list' | 'search' | 'edit' | 'trash' | 'back' | 'cube' | 'spin' | 'user'; size?: number }) {
   const p = {
     plus: 'M12 5v14M5 12h14',
     refresh: 'M20 11a8 8 0 10-2.3 5.7M20 4v7h-7',
@@ -154,6 +154,7 @@ export function Icon({ name, size = 18 }: { name: 'plus' | 'refresh' | 'sun' | '
     back: 'M15 18l-6-6 6-6',
     cube: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5',
     spin: 'M12 3a9 9 0 109 9',
+    user: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0',
   }[name];
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className={name === 'spin' ? 'animate-spin' : undefined}>

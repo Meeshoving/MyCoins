@@ -5,15 +5,18 @@ import App from './App';
 import { SettingsProvider } from './hooks/useSettings';
 import { PriceProvider } from './hooks/usePrices';
 import { CoinsProvider } from './hooks/useCoins';
+import { AccountProvider } from './sync/account';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SettingsProvider>
-      <PriceProvider>
-        <CoinsProvider>
-          <App />
-        </CoinsProvider>
-      </PriceProvider>
-    </SettingsProvider>
+    <AccountProvider>
+      <SettingsProvider>
+        <PriceProvider>
+          <CoinsProvider>
+            <App />
+          </CoinsProvider>
+        </PriceProvider>
+      </SettingsProvider>
+    </AccountProvider>
   </StrictMode>,
 );

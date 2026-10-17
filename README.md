@@ -96,6 +96,25 @@ This fills in the name, country, denomination, metal, purity, weight, size and t
 
 **Settings → Data** lets you export the whole collection as a JSON backup and import one again.
 
+## Sync between devices (sign in with Google)
+
+When the site has a Firebase project set up, a **Sign in** button appears at the top. Signed in, your coins, photos and settings (including the Numista key) are saved to your account and show up on every device where you sign in. Without signing in, everything stays in the browser as before.
+
+- The first time you sign in, the app offers to copy the coins already in that browser into your account.
+- The account keeps a copy on each device, so the collection also opens offline and catches up when you're back online.
+- **Sign out on this device** (Settings) removes the account's copy from that device and shows the browser's own coins again.
+
+How it's built: Firebase Authentication (Google) and Cloud Firestore on the free Spark plan. Each person's data lives under `users/{their id}/`, and [`firestore.rules`](firestore.rules) lets people read and write only their own. The project details are in `src/sync/firebaseConfig.ts`. They are not secret: they only name the project, and the rules guard the data. Firebase's free plan allows 50,000 reads and 20,000 writes per day, which is far more than a personal collection needs.
+
+Setting up your own Firebase project:
+
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com).
+2. **Authentication** → Sign-in method → enable **Google**. Under Settings → Authorized domains, add your site's domain (e.g. `meeshoving.github.io`).
+3. **Firestore Database** → Create database (production mode). Under **Rules**, paste the contents of `firestore.rules` and click **Publish**.
+4. **Project settings** → Your apps → add a **Web** app and copy its `firebaseConfig` into `src/sync/firebaseConfig.ts`.
+
+For testing, `VITE_FIREBASE_EMULATOR=1` points the app at the local Firebase emulators (`firebase emulators:start --project demo-mycoins --only auth,firestore`).
+
 ## Prices
 
 The price badge in the header shows **Live**, **Stale** (live prices couldn't be refreshed, so the last good ones are shown) or **Manual**. It also shows when prices were last updated.
@@ -126,6 +145,7 @@ data/examples.json         example coins visitors can load to try the app
 src/domain/                types, valuation maths, Dutch/era classification, validation (+ tests)
 src/prices/                swappable spot-price providers (+ tests)
 src/catalog/               Numista coin catalogue lookup (+ tests)
+src/sync/                  Google sign-in and syncing through Firebase (+ tests)
 src/storage/               where coins are saved (dev file API, browser IndexedDB) and example coins
 src/hooks/                 React state for settings, prices, coins, routing
 src/components/dashboard/  overview, hero totals, charts
