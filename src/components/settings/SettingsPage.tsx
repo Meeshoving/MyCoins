@@ -2,10 +2,10 @@ import { useRef, useState } from 'react';
 import { useSettings, type ThemeSetting } from '../../hooks/useSettings';
 import { usePrices } from '../../hooks/usePrices';
 import { useCoins } from '../../hooks/useCoins';
-import { CURRENCIES, METALS, type Currency, type Metal } from '../../domain/types';
+import { CURRENCIES, METALS, type Currency } from '../../domain/types';
 import { validateCoin } from '../../domain/validate';
 import type { Coin } from '../../domain/types';
-import { PROVIDERS } from '../../prices/providers';
+import { PROVIDERS, providerById } from '../../prices/providers';
 import { isExample } from '../../storage/examples';
 import { dateTime, money } from '../../lib/format';
 import { spotIn } from '../../domain/valuation';
@@ -21,28 +21,11 @@ export function SettingsPage() {
   const { status } = useAccount();
   const { prices, fx, loading, error, refresh, fallback } = usePrices();
   const { coins, storeLabel, replaceAll } = useCoins();
-  const [manual, setManual] = useState(() =>
-    Object.fromEntries(METALS.map((m) => [m, String(settings.manualPerOz[m])])) as Record<Metal, string>,
-  );
   const [msg, setMsg] = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<Coin[] | null>(null);
   const [confirmRemoveExamples, setConfirmRemoveExamples] = useState(false);
   const exampleCount = coins.filter(isExample).length;
   const fileRef = useRef<HTMLInputElement>(null);
-
-  function saveManual() {
-    const perOz = {} as Record<Metal, number>;
-    for (const m of METALS) {
-      const n = Number(manual[m].replace(',', '.'));
-      if (!(n > 0)) {
-        setMsg(`Enter a positive ${m} price`);
-        return;
-      }
-      perOz[m] = n;
-    }
-    update({ manualPerOz: perOz, manualUpdatedAt: new Date().toISOString() });
-    setMsg('Manual prices saved');
-  }
 
   function exportJson() {
     const blob = new Blob([JSON.stringify({ version: 1, coins }, null, 2)], { type: 'application/json' });
@@ -113,14 +96,13 @@ export function SettingsPage() {
           <select className={inputCls} value={settings.priceSource} onChange={(e) => update({ priceSource: e.target.value })}>
             {PROVIDERS.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.label} (live)
+                {p.label}
               </option>
             ))}
-            <option value="manual">Manual prices only</option>
           </select>
         </Row>
         <p className="text-sm text-muted">
-          {PROVIDERS.find((p) => p.id === settings.priceSource)?.description ?? 'Values use the prices you enter below.'}
+          {providerById(settings.priceSource).description}
         </p>
 
         <dl className="grid grid-cols-2 gap-4 rounded-2xl bg-surface-2 p-4 text-sm sm:grid-cols-4">
@@ -138,17 +120,14 @@ export function SettingsPage() {
         </dl>
         {error && (
           <p role="alert" className="text-sm text-down">
-            Could not fetch live prices: {error}. {fallback ? 'Using your manual prices for now.' : 'Showing the last prices that loaded.'}
+            Could not fetch live prices: {error}. {fallback ? 'Using the latest monthly average price until live prices load.' : 'Showing the last prices that loaded.'}
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          {settings.priceSource !== 'manual' && (
-            <Button onClick={refresh} disabled={loading}>
-              {loading ? 'Refreshing…' : 'Refresh now'}
-            </Button>
-          )}
-          {settings.priceSource !== 'manual' && (
-            <label className="flex items-center gap-2 text-sm text-muted">
+          <Button onClick={refresh} disabled={loading}>
+            {loading ? 'Refreshing…' : 'Refresh now'}
+          </Button>
+          <label className="flex items-center gap-2 text-sm text-muted">
               Auto-refresh every
               <select className="h-9 rounded-xl border border-line bg-surface-2 px-2 text-ink" value={settings.refreshMinutes} onChange={(e) => update({ refreshMinutes: Number(e.target.value) })}>
                 {[5, 15, 30, 60, 240].map((n) => (
@@ -158,33 +137,8 @@ export function SettingsPage() {
                 ))}
               </select>
             </label>
-          )}
         </div>
 
-        <div className="hairline" />
-        <div>
-          <p className="font-semibold">Manual prices</p>
-          <p className="mt-1 text-sm text-muted">Used when the source is set to manual, or as a fallback when live prices can't be fetched. Per troy ounce.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-4">
-            {METALS.map((m) => (
-              <label key={m}>
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint">{m}</span>
-                <input className={inputCls} inputMode="decimal" value={manual[m]} onChange={(e) => setManual((x) => ({ ...x, [m]: e.target.value }))} />
-              </label>
-            ))}
-            <label>
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint">Currency</span>
-              <select className={inputCls} value={settings.manualCurrency} onChange={(e) => update({ manualCurrency: e.target.value as Currency })}>
-                {CURRENCIES.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <Button className="mt-4" onClick={saveManual}>
-            Save manual prices
-          </Button>
-        </div>
       </Card>
 
       <Card className="space-y-4 p-6">

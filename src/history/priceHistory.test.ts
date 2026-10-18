@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addMonths, niceTicks, rangeStats, seriesFor, startForYears, timeTicks, type PriceHistoryFile } from './priceHistory';
+import { addMonths, latestPrices, niceTicks, rangeStats, seriesFor, startForYears, timeTicks, type PriceHistoryFile } from './priceHistory';
 
 const file: PriceHistoryFile = {
   generatedAt: '',
@@ -20,6 +20,14 @@ describe('price history', () => {
     expect(seriesFor(file, 'gold', 'GBP').map((p) => p.month)).toEqual(['1998-11', '1999-01', '1999-02']);
     expect(seriesFor(file, 'silver', 'EUR')[2].value).toBeCloseTo(5.4);
     expect(addMonths('1998-11', 14)).toBe('2000-01');
+  });
+
+  it('uses the newest monthly averages as offline prices', () => {
+    expect(latestPrices(file)).toBeNull(); // no platinum at all
+    const p = latestPrices({ ...file, usd: { ...file.usd, platinum: [900, 910, null, null] } })!;
+    expect(p.perOz).toEqual({ silver: 6, gold: 287, platinum: 910 });
+    expect(p.mode).toBe('offline');
+    expect(p.updatedAt.slice(0, 7)).toBe('1999-02');
   });
 
   it('picks the start of a range and its stats', () => {

@@ -44,8 +44,8 @@ export interface SpotPrices {
   perOz: Record<Metal, number>;
   /** ISO timestamp of when the prices were fetched or entered. */
   updatedAt: string;
-  /** "live" = fetched from a provider, "manual" = typed in Settings. */
-  mode: 'live' | 'manual';
+  /** "live" = fetched from a provider, "offline" = an estimate used until live prices first load. */
+  mode: 'live' | 'offline';
   source: string;
 }
 

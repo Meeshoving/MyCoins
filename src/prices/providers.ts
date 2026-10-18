@@ -104,6 +104,16 @@ export const metalsDevProvider: PriceProvider = {
 
 export const PROVIDERS: PriceProvider[] = [goldApiProvider, metalsDevProvider];
 
-export function providerById(id: string): PriceProvider | undefined {
-  return PROVIDERS.find((p) => p.id === id);
+/** The chosen provider, or the default one when the id is unknown. */
+export function providerById(id: string): PriceProvider {
+  return PROVIDERS.find((p) => p.id === id) ?? goldApiProvider;
 }
+
+/** Rough prices (USD per troy ounce, Sep 2026) used only until live or historical prices load. */
+export const OFFLINE_ESTIMATE: SpotPrices = {
+  currency: 'USD',
+  perOz: { silver: 64, gold: 4300, platinum: 1600 },
+  updatedAt: '2026-09-15T00:00:00.000Z',
+  mode: 'offline',
+  source: 'Built-in estimate',
+};

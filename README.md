@@ -118,11 +118,11 @@ For testing, `VITE_FIREBASE_EMULATOR=1` points the app at the local Firebase emu
 
 ## Prices
 
-The price badge in the header shows **Live**, **Stale** (live prices couldn't be refreshed, so the last good ones are shown) or **Manual**. It also shows when prices were last updated.
+The price badge in the header shows **Live**, **Stale** (live prices couldn't be refreshed, so the last good ones are shown) or **Offline**. It also shows when prices were last updated.
 
 - **Default source:** [gold-api.com](https://gold-api.com). It's free and needs no key. Prices are in USD per troy ounce and are converted to your currency with European Central Bank rates from [frankfurter.dev](https://frankfurter.dev).
 - **Optional:** [metals.dev](https://metals.dev) has a free tier with a key. Copy `.env.example` to `.env`, set `VITE_METALS_DEV_API_KEY`, then pick metals.dev in **Settings → Spot prices**. `.env` is git-ignored.
-- **Manual:** choose "Manual prices only" in Settings and type your own prices per troy ounce. These manual prices are also the fallback whenever a live source can't be reached.
+- **Offline:** until live prices have loaded once, the app uses the latest monthly average from the price history below (or a built-in estimate if that isn't available either). After that, the last live prices are kept and shown as **Stale** when they can't be refreshed.
 
 Prices refresh automatically every 15 minutes by default (you can change this in Settings). Click the refresh icon in the header to refresh at any time. The last prices are cached, so the app opens instantly.
 

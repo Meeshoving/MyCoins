@@ -9,7 +9,7 @@ const prices: SpotPrices = {
   currency: 'USD',
   perOz: { silver: 30, gold: 2500, platinum: 1000 },
   updatedAt: '2026-01-01T00:00:00Z',
-  mode: 'manual',
+  mode: 'live',
   source: 'test',
 };
 
