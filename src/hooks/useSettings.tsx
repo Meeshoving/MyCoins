@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAccount } from '../sync/account';
-import type { Currency, Metal } from '../domain/types';
+import type { Currency } from '../domain/types';
 import { readJson, writeJson } from '../lib/storage';
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
@@ -8,12 +8,8 @@ export type ThemeSetting = 'system' | 'light' | 'dark';
 export interface Settings {
   currency: Currency;
   theme: ThemeSetting;
-  /** A provider id from prices/providers.ts, or "manual". */
+  /** A provider id from prices/providers.ts. */
   priceSource: string;
-  /** Prices typed in by hand, per troy ounce, in `manualCurrency`. */
-  manualPerOz: Record<Metal, number>;
-  manualCurrency: Currency;
-  manualUpdatedAt: string;
   /** Minutes between automatic refreshes of live prices. */
   refreshMinutes: number;
   /** Personal Numista API key for the coin lookup. Kept in this browser, and in your account when signed in. */
@@ -24,9 +20,6 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: 'EUR',
   theme: 'system',
   priceSource: 'gold-api',
-  manualPerOz: { silver: 30, gold: 2400, platinum: 900 },
-  manualCurrency: 'EUR',
-  manualUpdatedAt: '2026-10-17T00:00:00.000Z',
   refreshMinutes: 15,
   numistaKey: '',
 };
@@ -34,7 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
 const KEY = 'mycoins.settings.v1';
 
 /** Settings that follow a signed-in person to every device. Theme stays per device. */
-const SYNCED = ['currency', 'priceSource', 'manualPerOz', 'manualCurrency', 'manualUpdatedAt', 'refreshMinutes', 'numistaKey'] as const;
+const SYNCED = ['currency', 'priceSource', 'refreshMinutes', 'numistaKey'] as const;
 type SyncedKey = (typeof SYNCED)[number];
 
 /** Keeps only synced keys whose value has the expected type. */
@@ -44,6 +37,8 @@ function pickSynced(source: Partial<Settings> | Record<string, unknown>): Partia
     const v = (source as Record<string, unknown>)[k];
     if (v !== undefined && typeof v === typeof DEFAULT_SETTINGS[k]) out[k] = v;
   }
+  // "manual" was a price source in older versions.
+  if (out.priceSource === 'manual') delete out.priceSource;
   return out as Partial<Settings>;
 }
 
@@ -62,7 +57,12 @@ function systemTheme(): 'light' | 'dark' {
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<Settings>(() => ({ ...DEFAULT_SETTINGS, ...readJson(KEY, {}) }));
+  const [settings, setSettings] = useState<Settings>(() => {
+    const stored = readJson<Partial<Settings>>(KEY, {});
+    // "manual" was a price source in older versions.
+    if (stored.priceSource === 'manual') delete stored.priceSource;
+    return { ...DEFAULT_SETTINGS, ...stored };
+  });
   const [sys, setSys] = useState(systemTheme);
 
   useEffect(() => {

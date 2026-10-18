@@ -6,9 +6,9 @@ import { cx, Icon } from './ui/primitives';
 import { href } from '../hooks/useRoute';
 
 export function PriceStatusBadge() {
-  const { prices, stale, fallback } = usePrices();
+  const { prices, stale } = usePrices();
   const live = prices.mode === 'live' && !stale;
-  const label = live ? 'Live' : stale ? 'Stale' : fallback ? 'Manual (offline)' : 'Manual';
+  const label = live ? 'Live' : stale ? 'Stale' : 'Offline';
   return (
     <span
       className={cx(
@@ -27,7 +27,6 @@ export function PricePill() {
   const { settings } = useSettings();
   const ag = spotIn(prices, 'silver', settings.currency, fx);
   const au = spotIn(prices, 'gold', settings.currency, fx);
-  const canRefresh = settings.priceSource !== 'manual';
   return (
     <div className="flex items-center gap-3 rounded-full border border-line bg-surface px-3 py-1.5 text-xs shadow-card" title={error ?? `Updated ${dateTime(prices.updatedAt)} · ${prices.source}`}>
       <a href={href({ name: 'prices', metal: 'silver' })} className="rounded-full" title="Price history">
@@ -40,11 +39,9 @@ export function PricePill() {
         <span className="text-faint">Au</span> <span className="font-semibold">{money(au, settings.currency, { decimals: 0 })}</span>
       </a>
       <span className="hidden text-faint sm:inline">{relativeTime(prices.updatedAt)}</span>
-      {canRefresh && (
-        <button type="button" onClick={refresh} disabled={loading} className="rounded-full p-1 text-muted hover:text-ink disabled:opacity-60" aria-label="Refresh spot prices">
-          <Icon name={loading ? 'spin' : 'refresh'} size={14} />
-        </button>
-      )}
+      <button type="button" onClick={refresh} disabled={loading} className="rounded-full p-1 text-muted hover:text-ink disabled:opacity-60" aria-label="Refresh spot prices">
+        <Icon name={loading ? 'spin' : 'refresh'} size={14} />
+      </button>
     </div>
   );
 }

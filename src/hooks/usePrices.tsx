@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { FxRates, SpotPrices } from '../domain/types';
 import { FALLBACK_FX } from '../domain/valuation';
 import { readJson, writeJson } from '../lib/storage';
-import { providerById } from '../prices/providers';
+import { OFFLINE_ESTIMATE, providerById } from '../prices/providers';
+import { latestHistoryPrices } from '../history/priceHistory';
 import { useSettings } from './useSettings';
 
 interface PriceCache {
@@ -19,7 +20,7 @@ export interface PriceState {
   fx: FxRates;
   /** True when live prices could not be refreshed and older cached ones are shown. */
   stale: boolean;
-  /** True when live prices were wanted but none have ever loaded, so manual prices are used. */
+  /** True when live prices have never loaded, so the latest monthly average (or a built-in estimate) is used. */
   fallback: boolean;
   loading: boolean;
   error: string | null;
@@ -35,10 +36,19 @@ export function PriceProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const provider = settings.priceSource === 'manual' ? undefined : providerById(settings.priceSource);
+  const provider = providerById(settings.priceSource);
+  // Until live prices first load, use the latest monthly average from the price history.
+  const [offline, setOffline] = useState<SpotPrices>(OFFLINE_ESTIMATE);
+  useEffect(() => {
+    if (cache.prices) return;
+    let on = true;
+    void latestHistoryPrices().then((p) => on && p && setOffline(p));
+    return () => {
+      on = false;
+    };
+  }, [cache.prices]);
 
   const refresh = useCallback(async () => {
-    if (!provider) return;
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -64,7 +74,6 @@ export function PriceProvider({ children }: { children: ReactNode }) {
   const refreshRef = useRef(refresh);
   refreshRef.current = refresh;
   useEffect(() => {
-    if (!provider) return;
     const fresh =
       cache.prices?.source === provider.label &&
       Date.now() - new Date(cache.prices.updatedAt).getTime() < settings.refreshMinutes * 60_000;
@@ -72,28 +81,22 @@ export function PriceProvider({ children }: { children: ReactNode }) {
     const t = setInterval(() => void refreshRef.current(), Math.max(1, settings.refreshMinutes) * 60_000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider?.id, settings.refreshMinutes]);
+  }, [provider.id, settings.refreshMinutes]);
 
   const value = useMemo<PriceState>(() => {
-    const manual: SpotPrices = {
-      currency: settings.manualCurrency,
-      perOz: settings.manualPerOz,
-      updatedAt: settings.manualUpdatedAt,
-      mode: 'manual',
-      source: 'Manual',
-    };
     const fx = cache.fx ?? FALLBACK_FX;
-    const live = provider && cache.prices?.source === provider.label ? cache.prices : null;
+    // The last live prices that loaded, even from another source, beat an estimate.
+    const live = cache.prices?.mode === 'live' ? cache.prices : null;
     return {
-      prices: live ?? manual,
+      prices: live ?? offline,
       fx,
-      stale: !!live && !!error,
-      fallback: !!provider && !live,
+      stale: !!live && (!!error || live.source !== provider.label),
+      fallback: !live,
       loading,
       error,
       refresh: () => void refresh(),
     };
-  }, [settings, cache, provider, loading, error, refresh]);
+  }, [cache, provider, offline, loading, error, refresh]);
 
   return <PriceContext.Provider value={value}>{children}</PriceContext.Provider>;
 }

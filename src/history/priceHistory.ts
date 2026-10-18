@@ -1,4 +1,4 @@
-import type { Currency, Metal } from '../domain/types';
+import { METALS, type Currency, type Metal, type SpotPrices } from '../domain/types';
 
 /** public/data/price-history.json, written by scripts/fetch-price-history.mjs. */
 export interface PriceHistoryFile {
@@ -33,6 +33,31 @@ export function loadPriceHistory(): Promise<PriceHistoryFile | null> {
     });
   return cached;
 }
+
+/** The newest monthly average of each metal, in USD, as offline spot prices. */
+export function latestPrices(file: PriceHistoryFile): SpotPrices | null {
+  const perOz = {} as Record<Metal, number>;
+  let newest = -1;
+  for (const m of METALS) {
+    let i = file.usd[m].length - 1;
+    while (i >= 0 && file.usd[m][i] == null) i--;
+    if (i === -1) return null;
+    perOz[m] = file.usd[m][i]!;
+    newest = Math.max(newest, i);
+  }
+  const month = addMonths(file.start, newest);
+  return {
+    currency: 'USD',
+    perOz,
+    updatedAt: new Date(monthTime(month)).toISOString(),
+    mode: 'offline',
+    source: `${file.sources.metals.name}, ${monthLabel(month)} average`,
+  };
+}
+
+export const latestHistoryPrices = () => loadPriceHistory().then((f) => (f ? latestPrices(f) : null));
+
+const monthLabel = (month: string) => new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(monthTime(month));
 
 export function addMonths(month: string, n: number): string {
   const [y, m] = month.split('-').map(Number);
